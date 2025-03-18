@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -88,9 +89,83 @@ func readTasks(reader *bufio.Reader) {
 }
 
 func updateTask(reader *bufio.Reader) {
+	fmt.Println("Введите ID задачи, которая будет обновлена:")
+	idStr, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Ошибка чтения ID:", err)
+		return
+	}
+	idStr = strings.TrimSpace(idStr)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		fmt.Println("Ошибка преобразования ID:", err)
+		return
+	}
 
+	var foundTask *Tasks
+	var lastName string
+	for i := range tasks {
+		if tasks[i].ID == id {
+			foundTask = &tasks[i]
+			lastName = tasks[i].Name
+			break
+		}
+	}
+
+	if foundTask == nil {
+		fmt.Println("Задача с таким ID не найдена.")
+		return
+	}
+
+	fmt.Println("Введите новое название задачи:")
+	newName, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Ошибка чтения строки:", err)
+		return
+	}
+	newName = strings.TrimSpace(newName)
+
+	if len(newName) < 2 || newName == lastName {
+		fmt.Println("Название задачи должно содержать минимум 3 символа\nи новое название не должно совпадать с предыдущим ")
+		return
+	}
+	foundTask.Name = newName
+	fmt.Printf("Задача обновлена: ID=%d, Новое название=%s\n", foundTask.ID, foundTask.Name)
 }
 
 func deleteTask(reader *bufio.Reader) {
+	fmt.Println("Введите ID задачи для удаления:")
+	idStr, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Ошибка чтения ID:", err)
+		return
+	}
+	idStr = strings.TrimSpace(idStr)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		fmt.Println("Ошибка преобразования ID:", err)
+		return
+	}
 
+	var foundIndex = -1
+	for i, task := range tasks {
+		if task.ID == id {
+			foundIndex = i
+			break
+		}
+	}
+
+	if foundIndex == -1 {
+		fmt.Println("Задача с таким ID не найдена.")
+		return
+	}
+
+	tasks = append(tasks[:foundIndex], tasks[foundIndex+1:]...)
+
+	for i := foundIndex; i < len(tasks); i++ {
+		tasks[i].ID = i + 1
+	}
+
+	nextID = len(tasks) + 1
+	fmt.Printf("Задача с ID=%d удалена.\n", id)
 }
