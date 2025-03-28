@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"v0/TO_DO_LIST/logic"
+	"v0/logic"
 )
 
 const (

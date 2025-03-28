@@ -1,7 +1,7 @@
 package main
 
 import (
-	"v0/TO_DO_LIST/app"
+	"v0/app"
 )
 
 func main() {

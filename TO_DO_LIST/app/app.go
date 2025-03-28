@@ -3,8 +3,8 @@ package app
 import (
 	"bufio"
 	"os"
-	"v0/TO_DO_LIST/action"
-	"v0/TO_DO_LIST/logic"
+	"v0/action"
+	"v0/logic"
 )
 
 func NewTaskManager() *logic.TaskManager {
