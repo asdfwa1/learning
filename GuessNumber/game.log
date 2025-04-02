@@ -1,0 +1,14 @@
+{"time":"2025-04-01T21:41:49.9613576+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":8188,"attempts_used":14,"result":"LOSE"}
+{"time":"2025-04-02T03:26:19.7575047+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":8302,"attempts_used":14,"result":"LOSE"}
+{"time":"2025-04-02T03:34:48.7949088+03:00","level":"INFO","msg":"Игрок победил","secret_number":7873,"attempts_used":12,"result":"WIN"}
+{"time":"2025-04-02T03:36:12.2672398+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":4729,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T18:14:46.8740961+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":3399,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T19:13:14.5181478+03:00","level":"INFO","msg":"Игрок победил","secret_number":3160,"attempts_used":13,"result":"WIN"}
+{"time":"2025-04-02T21:08:11.6555579+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":3968,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T21:08:42.8384192+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":9393,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T21:09:03.2610192+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":160,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T23:40:33.3539117+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":2697,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T23:41:36.2161394+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":4151,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T23:42:09.2202145+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":5599,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T23:42:52.8233412+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":9856,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-02T23:43:20.7167437+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":6143,"attempts_used":15,"result":"LOSE"}
