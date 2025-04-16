@@ -12,3 +12,4 @@
 {"time":"2025-04-02T23:42:09.2202145+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":5599,"attempts_used":15,"result":"LOSE"}
 {"time":"2025-04-02T23:42:52.8233412+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":9856,"attempts_used":15,"result":"LOSE"}
 {"time":"2025-04-02T23:43:20.7167437+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":6143,"attempts_used":15,"result":"LOSE"}
+{"time":"2025-04-15T21:09:10.1992249+03:00","level":"INFO","msg":"Игрок не угадал число","secret_number":171,"attempts_used":15,"result":"LOSE"}

@@ -95,8 +95,12 @@ func main() {
 		)
 
 		table := widget.NewTable(
-			func() (int, int) { return len(recordsTable), 3 },
-			func() fyne.CanvasObject { return widget.NewLabel("") },
+			func() (int, int) {
+				return len(recordsTable), 3
+			},
+			func() fyne.CanvasObject {
+				return widget.NewLabel("")
+			},
 			func(tci widget.TableCellID, o fyne.CanvasObject) {
 				label := o.(*widget.Label)
 				label.SetText(recordsTable[tci.Row][tci.Col])
