@@ -62,7 +62,7 @@ func (a *App) handleQuery(input string) {
 
 	switch query.Type {
 	case parser.QueryCreateTable:
-		a.handleCreateTable(query)
+		a.HandleCreateTable(query)
 	case parser.QuerySelect:
 		a.handleSelect(query)
 	case parser.QueryUpdate:
@@ -78,15 +78,14 @@ func (a *App) handleQuery(input string) {
 	}
 }
 
-func (a *App) handleCreateTable(query *parser.Query) {
+func (a *App) HandleCreateTable(query *parser.Query) error {
 	if a.Storage.TableExist(query.Table) {
-		fmt.Printf("Error: таблица %s уже существует\n", query.Table)
-		return
+		return fmt.Errorf("Error: таблица %s уже существует", query.Table)
 	}
+
 	err := a.DB.CreateTable(query.Table, query.Fields)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return
+		return fmt.Errorf("Error: %v", err)
 	}
 
 	table, _ := a.DB.SelectAll(query.Table)
@@ -96,11 +95,13 @@ func (a *App) handleCreateTable(query *parser.Query) {
 		Fields:  query.Fields,
 		Records: table,
 	})
+
 	if err != nil {
-		fmt.Printf("Error: таблица не сохранена: %v\n", err)
-	} else {
-		fmt.Println("Таблица успешно создана")
+		return fmt.Errorf("Error: таблица не сохранена: %v", err)
 	}
+
+	fmt.Println("Таблица успешно создана")
+	return nil
 }
 
 func (a *App) handleSelect(query *parser.Query) {
@@ -285,19 +286,4 @@ func (a *App) handleHelp() {
    exit - завершить программу
 `
 	fmt.Println(helpText)
-}
-
-func printTable(records map[int]database.Record) {
-	for id, record := range records {
-		fmt.Printf("%d: ", id)
-		i := 0
-		for fieldName, fieldValue := range record {
-			fmt.Printf("%s:%s", fieldName, fieldValue)
-			i++
-			if i < len(record) {
-				fmt.Printf(" ")
-			}
-		}
-		fmt.Println()
-	}
 }

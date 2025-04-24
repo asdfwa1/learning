@@ -67,26 +67,6 @@ func ParseQuery(input string) (*Query, error) {
 	}
 	command := strings.ToUpper(parts[0])
 	switch command {
-	/*case CREATE:
-	  query.Type = QueryCreateTable
-	  if len(parts) < 3 {
-	    return nil, errors.New("необходимо указать имя таблицы и поля")
-	  }
-	  query.Table = parts[2]
-
-	  pieceParts := strings.Join(parts[2:], " ")
-	  query.Fields = strings.Split(pieceParts, ",")
-
-	  for i := range query.Fields {
-	    query.Fields[i] = strings.TrimSpace(query.Fields[i])
-	    if query.Fields[i] == "" {
-	      return nil, errors.New("имя поля не должно быть пустым")
-	    }
-	  }
-
-	  if len(query.Fields) == 0 {
-	    return nil, errors.New("для создания табилцы необходимо указать поля")
-	  }*/
 	case SELECT:
 		if len(parts) < 3 {
 			return nil, errors.New("формат: SELECT <table> <id> or <*>")
