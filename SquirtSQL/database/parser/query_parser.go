@@ -54,6 +54,9 @@ func ParseQuery(input string) (*Query, error) {
 				return nil, errors.New("не указано имя таблицы")
 			}
 			query.Table = nameAndFields[0]
+			if len(nameAndFields) < 2 {
+				return nil, errors.New("не указаны поля таблицы")
+			}
 
 			if len(nameAndFields) > 1 {
 				fields := strings.Split(nameAndFields[1], ",")

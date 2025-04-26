@@ -3,6 +3,7 @@ package actions
 import (
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"sort"
 	"sync"
 	"v4/database"
@@ -187,7 +188,9 @@ func (db *Database) LoadTables() error {
 			continue
 		}
 		db.Tables[name] = table
-		fmt.Printf("Таблица %s загружена\n", name)
+		TableColor := color.New(color.FgBlue).SprintFunc()
+		valid := fmt.Sprintf("Таблица %s загружена", name)
+		fmt.Println(TableColor(valid))
 	}
 
 	return nil

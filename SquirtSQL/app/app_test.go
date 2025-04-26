@@ -33,10 +33,11 @@ func TestHandleCreateTable(t *testing.T) {
 	defer cleanupTestApp(tempDir)
 
 	tests := []struct {
-		name       string
-		input      string
-		wantErr    bool
-		errMessage string
+		name             string
+		input            string
+		wantErr          bool
+		errMessage       string
+		expectParseError bool
 	}{
 		{
 			name:    "Valid table creation",
@@ -50,29 +51,143 @@ func TestHandleCreateTable(t *testing.T) {
 			errMessage: "таблица users уже существует",
 		},
 		{
-			name:    "Invalid syntax - missing fields",
-			input:   "CREATE TABLE products",
-			wantErr: false,
+			name:             "Invalid syntax - missing fields",
+			input:            "CREATE TABLE products",
+			wantErr:          true,
+			errMessage:       "не указаны поля таблицы",
+			expectParseError: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			query, parseErr := parser.ParseQuery(tt.input)
-			if parseErr != nil && !tt.wantErr {
-				t.Fatalf("Parse error: %v", parseErr)
+			if tt.expectParseError {
+				if parseErr == nil {
+					t.Error("Expected parse error, got nil")
+				} else if !strings.Contains(parseErr.Error(), tt.errMessage) {
+					t.Errorf("Expected parse error to contain '%s', got '%s'",
+						tt.errMessage, parseErr.Error())
+				}
+				return
 			}
-			err := app.HandleCreateTable(query)
 
+			if parseErr != nil {
+				t.Fatalf("Unexpected parse error: %v", parseErr)
+			}
+
+			app.HandleCreateTable(query)
+
+			// ПЕРЕДЕЛАТЬ
 			if tt.wantErr {
 				if err == nil {
 					t.Error("Expected error, got nil")
 				} else if !strings.Contains(err.Error(), tt.errMessage) {
-					t.Errorf("Expected error to contain '%s', got '%s'", tt.errMessage, err.Error())
+					t.Errorf("Expected error to contain '%s', got '%s'",
+						tt.errMessage, err.Error())
 				}
 			} else {
 				if err != nil {
 					t.Errorf("Unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestHandleSelect(t *testing.T) {
+	app, tempDir := setupTestApp(t)
+	defer cleanupTestApp(tempDir)
+
+	createQuery := &parser.Query{
+		Type:   parser.QueryCreateTable,
+		Table:  "users",
+		Fields: []string{"name", "email"},
+	}
+	app.HandleCreateTable(createQuery)
+
+	insertQuery := &parser.Query{
+		Type:   parser.QueryInsert,
+		Table:  "users",
+		Fields: []string{"John Doe", "john@example.com"},
+	}
+	_, _ = app.DB.Insert(insertQuery.Table, insertQuery.Fields)
+
+	tests := []struct {
+		name        string
+		input       string
+		wantError   bool
+		errContains string
+	}{
+		{
+			name:      "Select all records - valid",
+			input:     "SELECT users *",
+			wantError: false,
+		},
+		{
+			name:      "Select by ID - valid",
+			input:     "SELECT users 1",
+			wantError: false,
+		},
+		{
+			name:        "Non-existent table",
+			input:       "SELECT unknown *",
+			wantError:   true,
+			errContains: "таблица unknown не найдена",
+		},
+		{
+			name:        "Non-existent record",
+			input:       "SELECT users 999",
+			wantError:   true,
+			errContains: "Записи не найдены",
+		},
+		{
+			name:        "Empty table",
+			input:       "SELECT empty *",
+			wantError:   true,
+			errContains: "Записи не найдены",
+		},
+		{
+			name:        "Invalid query syntax",
+			input:       "SELECT users",
+			wantError:   true,
+			errContains: "SELECT <table> <id> or <*>",
+		},
+	}
+
+	app.HandleCreateTable(&parser.Query{
+		Type:   parser.QueryCreateTable,
+		Table:  "empty",
+		Fields: []string{"field"},
+	})
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query, parseErr := parser.ParseQuery(tt.input)
+
+			if parseErr != nil {
+				if !tt.wantError {
+					t.Fatalf("Unexpected parse error: %v", parseErr)
+				}
+				if !strings.Contains(parseErr.Error(), tt.errContains) {
+					t.Errorf("Expected parse error to contain '%s', got '%s'",
+						tt.errContains, parseErr.Error())
+				}
+				return
+			}
+
+			app.handleSelect(query)
+
+			if !tt.wantError {
+				if !app.Storage.TableExist(query.Table) {
+					t.Errorf("Table %s should exist", query.Table)
+				}
+
+				if query.ID != -1 {
+					_, err := app.DB.Select(query.Table, query.ID)
+					if err != nil {
+						t.Errorf("Record %d should exist in table %s", query.ID, query.Table)
+					}
 				}
 			}
 		})

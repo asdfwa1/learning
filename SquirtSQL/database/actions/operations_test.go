@@ -98,14 +98,14 @@ func TestInsertAndSelect(t *testing.T) {
 	}{
 		{
 			name:     "Valid insert",
-			values:   []string{"John Doe", "john@example.com"},
+			values:   []string{"kolya", "kolay@mail.ru"},
 			wantErr:  false,
 			wantID:   1,
-			wantData: map[string]string{"name": "John Doe", "email": "john@example.com"},
+			wantData: map[string]string{"name": "kolya", "email": "kolay@mail.ru"},
 		},
 		{
 			name:    "Invalid field count",
-			values:  []string{"Jane Doe"},
+			values:  []string{"kolya"},
 			wantErr: true,
 		},
 	}
@@ -157,9 +157,9 @@ func TestSelectAll(t *testing.T) {
 	testData := []struct {
 		values []string
 	}{
-		{[]string{"Laptop", "999.99"}},
-		{[]string{"Phone", "599.99"}},
-		{[]string{"Tablet", "399.99"}},
+		{[]string{"Laptop", "600000"}},
+		{[]string{"Phone", "900000"}},
+		{[]string{"Tablet", "450000"}},
 	}
 
 	for _, data := range testData {
@@ -195,14 +195,14 @@ func TestUpdate(t *testing.T) {
 	db, tempDir := setupTestDB(t)
 	defer cleanupTestDB(tempDir)
 
-	tableName := "employees"
-	fields := []string{"name", "position"}
+	tableName := "users"
+	fields := []string{"name", "age"}
 	err := db.CreateTable(tableName, fields)
 	if err != nil {
 		t.Fatalf("Failed to create table: %v", err)
 	}
 
-	id, err := db.Insert(tableName, []string{"Alice", "Developer"})
+	id, err := db.Insert(tableName, []string{"Kolya", "22"})
 	if err != nil {
 		t.Fatalf("Failed to insert test data: %v", err)
 	}
@@ -217,9 +217,9 @@ func TestUpdate(t *testing.T) {
 		{
 			name:     "Valid update",
 			id:       id,
-			values:   []string{"Alice Smith", "Senior Developer"},
+			values:   []string{"Kolya T", "23"},
 			wantErr:  false,
-			wantData: map[string]string{"name": "Alice Smith", "position": "Senior Developer"},
+			wantData: map[string]string{"name": "Kolya T", "age": "23"},
 		},
 		{
 			name:    "Invalid field count",
@@ -229,8 +229,8 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			name:    "Non-existent record",
-			id:      999,
-			values:  []string{"Bob", "Manager"},
+			id:      9999999999999999,
+			values:  []string{"Andreu", "777"},
 			wantErr: true,
 		},
 	}
@@ -268,14 +268,14 @@ func TestDelete(t *testing.T) {
 	db, tempDir := setupTestDB(t)
 	defer cleanupTestDB(tempDir)
 
-	tableName := "customers"
+	tableName := "users"
 	fields := []string{"name", "email"}
 	err := db.CreateTable(tableName, fields)
 	if err != nil {
 		t.Fatalf("Failed to create table: %v", err)
 	}
 
-	id, err := db.Insert(tableName, []string{"Bob", "bob@example.com"})
+	id, err := db.Insert(tableName, []string{"kolya", "kolya@mail.ru"})
 	if err != nil {
 		t.Fatalf("Failed to insert test data: %v", err)
 	}
@@ -292,7 +292,7 @@ func TestDelete(t *testing.T) {
 		},
 		{
 			name:    "Non-existent record",
-			id:      999,
+			id:      999999999999999999,
 			wantErr: true,
 		},
 	}

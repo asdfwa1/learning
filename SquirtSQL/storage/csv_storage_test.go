@@ -29,8 +29,8 @@ func TestCSVStorage_SaveAndLoadTable(t *testing.T) {
 	fields := []string{"name", "age"}
 	table := database.NewTable("users", fields)
 
-	table.Records[1] = database.Record{"name": "Alice", "age": "30"}
-	table.Records[2] = database.Record{"name": "Bob", "age": "25"}
+	table.Records[1] = database.Record{"name": "Kolya", "age": "22"}
+	table.Records[2] = database.Record{"name": "Anonim", "age": "25"}
 	table.NextID = 3
 
 	err := storage.SaveTable(table)

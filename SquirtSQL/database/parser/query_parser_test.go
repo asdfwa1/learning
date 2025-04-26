@@ -30,13 +30,10 @@ func TestParseQuery(t *testing.T) {
 			errText:     "формат: CREATE TABLE <table> <values>",
 		},
 		{
-			name:  "CREATE TABLE missing fields",
-			input: "CREATE TABLE users",
-			expected: &Query{
-				Type:   QueryCreateTable,
-				Table:  "users",
-				Fields: []string{},
-			},
+			name:        "CREATE TABLE missing fields",
+			input:       "CREATE TABLE users",
+			expectError: true,
+			errText:     "не указаны поля таблицы",
 		},
 
 		// SELECT tests

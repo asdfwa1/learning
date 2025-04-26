@@ -3,6 +3,7 @@ package app
 import (
 	"bufio"
 	"fmt"
+	"github.com/fatih/color"
 	"os"
 	"sort"
 	"strings"
@@ -11,6 +12,18 @@ import (
 	"v4/database/parser"
 	"v4/storage"
 )
+
+var (
+	bold      func(a ...interface{}) string
+	helpColor func(a ...interface{}) string
+	exitColor func(a ...interface{}) string
+)
+
+func init() {
+	bold = color.New(color.Bold).SprintFunc()
+	helpColor = color.New(color.FgGreen).SprintFunc()
+	exitColor = color.New(color.FgRed).SprintFunc()
+}
 
 type App struct {
 	DB      *actions.Database
@@ -21,9 +34,9 @@ func NewApp() *App {
 	stor := storage.NewCSVStorage("data")
 	db := actions.NewDatabase(stor)
 
-	fmt.Println("SQUIRTSQL - простая база данных на основе CSV")
-	fmt.Println("Введите /help для просмотра функционала")
-	fmt.Println("Введите exit чтобы выйти")
+	fmt.Println(bold("SQUIRTSQL - простая база данных на основе CSV"))
+	fmt.Println("Введите", helpColor("/help"), "для просмотра функционала")
+	fmt.Println("Введите", exitColor("exit"), "чтобы выйти")
 	fmt.Println("---------------------------------------------")
 
 	if err := db.LoadTables(); err != nil {
@@ -78,14 +91,15 @@ func (a *App) handleQuery(input string) {
 	}
 }
 
-func (a *App) HandleCreateTable(query *parser.Query) error {
+func (a *App) HandleCreateTable(query *parser.Query) {
 	if a.Storage.TableExist(query.Table) {
-		return fmt.Errorf("Error: таблица %s уже существует", query.Table)
+		fmt.Printf("Error: таблица %s уже существует\n", query.Table)
+		return
 	}
-
 	err := a.DB.CreateTable(query.Table, query.Fields)
 	if err != nil {
-		return fmt.Errorf("Error: %v", err)
+		fmt.Printf("Error: %v\n", err)
+		return
 	}
 
 	table, _ := a.DB.SelectAll(query.Table)
@@ -95,13 +109,11 @@ func (a *App) HandleCreateTable(query *parser.Query) error {
 		Fields:  query.Fields,
 		Records: table,
 	})
-
 	if err != nil {
-		return fmt.Errorf("Error: таблица не сохранена: %v", err)
+		fmt.Printf("Error: таблица не сохранена: %v\n", err)
+	} else {
+		fmt.Println("Таблица успешно создана")
 	}
-
-	fmt.Println("Таблица успешно создана")
-	return nil
 }
 
 func (a *App) handleSelect(query *parser.Query) {
