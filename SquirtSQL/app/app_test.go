@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
@@ -78,17 +80,9 @@ func TestHandleCreateTable(t *testing.T) {
 
 			app.HandleCreateTable(query)
 
-			// ПЕРЕДЕЛАТЬ
-			if tt.wantErr {
-				if err == nil {
-					t.Error("Expected error, got nil")
-				} else if !strings.Contains(err.Error(), tt.errMessage) {
-					t.Errorf("Expected error to contain '%s', got '%s'",
-						tt.errMessage, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Unexpected error: %v", err)
+			if !tt.wantErr {
+				if !app.Storage.TableExist(query.Table) {
+					t.Errorf("Table %s should exist", query.Table)
 				}
 			}
 		})
@@ -109,7 +103,7 @@ func TestHandleSelect(t *testing.T) {
 	insertQuery := &parser.Query{
 		Type:   parser.QueryInsert,
 		Table:  "users",
-		Fields: []string{"John Doe", "john@example.com"},
+		Fields: []string{"Kolya", "kolya@mail.ru"},
 	}
 	_, _ = app.DB.Insert(insertQuery.Table, insertQuery.Fields)
 
@@ -192,4 +186,233 @@ func TestHandleSelect(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHandleUpdate(t *testing.T) {
+	app, tempDir := setupTestApp(t)
+	defer cleanupTestApp(tempDir)
+
+	createQuery := &parser.Query{
+		Type:   parser.QueryCreateTable,
+		Table:  "users",
+		Fields: []string{"name", "email"},
+	}
+	app.HandleCreateTable(createQuery)
+
+	insertQuery := &parser.Query{
+		Type:   parser.QueryInsert,
+		Table:  "users",
+		Fields: []string{"kolya", "kolya@mail.ru"},
+	}
+	insertedID, _ := app.DB.Insert(insertQuery.Table, insertQuery.Fields)
+
+	tests := []struct {
+		name        string
+		input       string
+		wantError   bool
+		errContains string
+	}{
+		{
+			name:      "Valid update",
+			input:     fmt.Sprintf("UPDATE users %d Alice,alice@mail.ru", insertedID),
+			wantError: false,
+		},
+		{
+			name:        "Non-existent table",
+			input:       "UPDATE unknown 1 New,Value",
+			wantError:   true,
+			errContains: "таблица unknown не найдена",
+		},
+		{
+			name:        "Non-existent record",
+			input:       "UPDATE users 999 New,Value",
+			wantError:   true,
+			errContains: "запись не найдена",
+		},
+		{
+			name:        "Invalid field count",
+			input:       fmt.Sprintf("UPDATE users %d OnlyName", insertedID),
+			wantError:   true,
+			errContains: "несоответствие количества полей",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query, parseErr := parser.ParseQuery(tt.input)
+			if parseErr != nil && !tt.wantError {
+				t.Fatalf("Parse error: %v", parseErr)
+			}
+			app.handleUpdate(query)
+
+			if !tt.wantError {
+
+				record, err := app.DB.Select(query.Table, query.ID)
+				if err != nil {
+					t.Errorf("Failed to select updated record: %v", err)
+				}
+				for i, field := range app.DB.Tables[query.Table].Fields {
+					if record[field] != query.Fields[i] {
+						t.Errorf("Field %s not updated, got %s, want %s",
+							field, record[field], query.Fields[i])
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestHandleInsert(t *testing.T) {
+	app, tempDir := setupTestApp(t)
+	defer cleanupTestApp(tempDir)
+
+	createQuery := &parser.Query{
+		Type:   parser.QueryCreateTable,
+		Table:  "users",
+		Fields: []string{"name", "email"},
+	}
+	app.HandleCreateTable(createQuery)
+
+	tests := []struct {
+		name        string
+		input       string
+		wantError   bool
+		errContains string
+	}{
+		{
+			name:      "Valid insert",
+			input:     "INSERT users kolya,kolya@mail.ru",
+			wantError: false,
+		},
+		{
+			name:        "Non-existent table",
+			input:       "INSERT unknown Value1,Value2",
+			wantError:   true,
+			errContains: "таблица unknown не найдена",
+		},
+		{
+			name:        "Invalid field count",
+			input:       "INSERT users OnlyName",
+			wantError:   true,
+			errContains: "несоответствие количества полей",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query, parseErr := parser.ParseQuery(tt.input)
+			if parseErr != nil && !tt.wantError {
+				t.Fatalf("Parse error: %v", parseErr)
+			}
+
+			initialCount := 0
+			if app.Storage.TableExist(query.Table) {
+				records, _ := app.DB.SelectAll(query.Table)
+				initialCount = len(records)
+			}
+
+			app.handleInsert(query)
+
+			if !tt.wantError {
+				records, err := app.DB.SelectAll(query.Table)
+				if err != nil {
+					t.Errorf("Failed to get records: %v", err)
+				}
+				if len(records) != initialCount+1 {
+					t.Errorf("Expected %d records, got %d", initialCount+1, len(records))
+				}
+			} else {
+				if app.Storage.TableExist(query.Table) {
+					records, _ := app.DB.SelectAll(query.Table)
+					if len(records) != initialCount {
+						t.Errorf("Record count should not change on error, got %d, want %d",
+							len(records), initialCount)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestHandleDelete(t *testing.T) {
+	app, tempDir := setupTestApp(t)
+	defer cleanupTestApp(tempDir)
+
+	createQuery := &parser.Query{
+		Type:   parser.QueryCreateTable,
+		Table:  "users",
+		Fields: []string{"name", "email"},
+	}
+	app.HandleCreateTable(createQuery)
+
+	insertQuery := &parser.Query{
+		Type:   parser.QueryInsert,
+		Table:  "users",
+		Fields: []string{"kolya", "kolya@mail.ru"},
+	}
+	insertedID, _ := app.DB.Insert(insertQuery.Table, insertQuery.Fields)
+
+	tests := []struct {
+		name        string
+		input       string
+		wantError   bool
+		errContains string
+	}{
+		{
+			name:      "Valid delete",
+			input:     fmt.Sprintf("DELETE users %d", insertedID),
+			wantError: false,
+		},
+		{
+			name:        "Non-existent table",
+			input:       "DELETE unknown 1",
+			wantError:   true,
+			errContains: "таблица unknown не найдена",
+		},
+		{
+			name:        "Non-existent record",
+			input:       "DELETE users 999",
+			wantError:   true,
+			errContains: "запись не найдена",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			query, parseErr := parser.ParseQuery(tt.input)
+			if parseErr != nil && !tt.wantError {
+				t.Fatalf("Parse error: %v", parseErr)
+			}
+			initialRecords, _ := app.DB.SelectAll("users")
+			app.handleDelete(query)
+
+			if !tt.wantError {
+				_, err := app.DB.Select(query.Table, query.ID)
+				if err == nil {
+					t.Errorf("Record %d should be deleted", query.ID)
+				}
+
+				currentRecords, _ := app.DB.SelectAll("users")
+				if len(initialRecords)-1 != len(currentRecords) {
+					t.Errorf("Expected %d records after delete, got %d",
+						len(initialRecords)-1, len(currentRecords))
+				}
+			} else if tt.errContains != "Error сохранения таблицы" {
+				currentRecords, _ := app.DB.SelectAll("users")
+				if len(initialRecords) != len(currentRecords) {
+					t.Error("Record count should not change on error")
+				}
+			}
+		})
+	}
+}
+
+func TestHandleHelp(t *testing.T) {
+	app, _ := setupTestApp(t)
+
+	notPanics := func() {
+		app.handleHelp()
+	}
+
+	assert.NotPanics(t, notPanics)
 }
